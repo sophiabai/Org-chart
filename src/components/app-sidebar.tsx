@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import { BarChart3, ChevronRight, Inbox, Network, Search, Users } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarRail,
   SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton,
@@ -28,7 +28,11 @@ const groups = [
   { name: "Analytics", url: "/analytics", icon: BarChart3 },
 ];
 
+const CLICKABLE_URLS = new Set(["/org-chart"]);
+
 export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
+  const { pathname } = useLocation();
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarContent className="pt-2">
@@ -37,8 +41,8 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
           <SidebarMenu>
             {quickAccess.map((i) => (
               <SidebarMenuItem key={i.title}>
-                <SidebarMenuButton asChild tooltip={i.title}>
-                  <Link to={i.url}><i.icon /><span>{i.title}</span></Link>
+                <SidebarMenuButton tooltip={i.title} className="cursor-default text-sidebar-foreground/60">
+                  <i.icon /><span>{i.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
@@ -48,35 +52,46 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
         <SidebarGroup>
           <SidebarGroupLabel>Workspace</SidebarGroupLabel>
           <SidebarMenu>
-            {groups.map((g) => g.items ? (
-              <Collapsible key={g.name} asChild className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip={g.name}>
-                      <g.icon /><span>{g.name}</span>
-                      <ChevronRight className="ml-auto transition-transform duration-200 ease-out-quint group-data-[state=open]/collapsible:rotate-90" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {g.items.map((s) => (
-                        <SidebarMenuSubItem key={s.title}>
-                          <SidebarMenuSubButton asChild>
-                            <Link to={s.url}>{s.title}</Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
+            {groups.map((g) => {
+              const clickable = CLICKABLE_URLS.has(g.url);
+              const active = pathname === g.url;
+
+              return g.items ? (
+                <Collapsible key={g.name} asChild className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton tooltip={g.name} className="cursor-default text-sidebar-foreground/60">
+                        <g.icon /><span>{g.name}</span>
+                        <ChevronRight className="ml-auto transition-transform duration-200 ease-out-quint group-data-[state=open]/collapsible:rotate-90" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {g.items.map((s) => (
+                          <SidebarMenuSubItem key={s.title}>
+                            <SidebarMenuSubButton className="cursor-default text-sidebar-foreground/60">
+                              {s.title}
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              ) : clickable ? (
+                <SidebarMenuItem key={g.name}>
+                  <SidebarMenuButton asChild tooltip={g.name} isActive={active}>
+                    <Link to={g.url}><g.icon /><span>{g.name}</span></Link>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
-              </Collapsible>
-            ) : (
-              <SidebarMenuItem key={g.name}>
-                <SidebarMenuButton asChild tooltip={g.name}>
-                  <Link to={g.url}><g.icon /><span>{g.name}</span></Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+              ) : (
+                <SidebarMenuItem key={g.name}>
+                  <SidebarMenuButton tooltip={g.name} className="cursor-default text-sidebar-foreground/60">
+                    <g.icon /><span>{g.name}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
